@@ -1,0 +1,938 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>픽셀아트 에디터</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f0f0f0;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .tools {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+            align-items: center;
+        }
+        
+        .tool-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .color-picker {
+            width: 50px;
+            height: 40px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        
+        .canvas-container {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+        
+        #pixelCanvas {
+            border: 2px solid #333;
+            cursor: crosshair;
+            background-color: white;
+            image-rendering: pixelated;
+        }
+        
+        .controls {
+            text-align: center;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        button:hover {
+            background-color: #0056b3;
+        }
+        
+        button.active {
+            background-color: #28a745;
+        }
+        
+        select, input {
+            padding: 8px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+        }
+        
+        .preset-colors {
+            display: flex;
+            gap: 3px;
+            flex-wrap: wrap;
+            max-width: 800px;
+        }
+        
+        .preset-color {
+            width: 25px;
+            height: 25px;
+            border: 2px solid #ddd;
+            border-radius: 3px;
+            cursor: pointer;
+            position: relative;
+        }
+        
+        .preset-color:hover {
+            border-color: #333;
+            transform: scale(1.1);
+        }
+        
+        /* NFT 관련 스타일 */
+        .nft-section {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin-left: 20px;
+            padding-left: 20px;
+            border-left: 2px solid #ddd;
+        }
+        
+        #walletStatus {
+            font-size: 12px;
+            color: #666;
+            background-color: #f8f9fa;
+            padding: 5px 10px;
+            border-radius: 15px;
+        }
+        
+        #walletStatus.connected {
+            color: #28a745;
+            background-color: #d4edda;
+        }
+        
+        .modal {
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+        
+        .modal-content {
+            background-color: white;
+            margin: 10% auto;
+            padding: 30px;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 500px;
+            position: relative;
+        }
+        
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            position: absolute;
+            right: 15px;
+            top: 10px;
+        }
+        
+        .close:hover {
+            color: #000;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+        
+        .form-group textarea {
+            height: 80px;
+            resize: vertical;
+        }
+        
+        .form-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+        
+        #confirmMint {
+            background-color: #28a745;
+        }
+        
+        #confirmMint:hover {
+            background-color: #218838;
+        }
+        
+        #cancelMint {
+            background-color: #6c757d;
+        }
+        
+        #cancelMint:hover {
+            background-color: #5a6268;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎨 픽셀아트 에디터</h1>
+        </div>
+        
+        <div class="tools">
+            <div class="tool-group">
+                <label>캔버스 크기:</label>
+                <select id="canvasSize">
+                    <option value="8">8x8</option>
+                    <option value="16" selected>16x16</option>
+                    <option value="32">32x32</option>
+                    <option value="64">64x64</option>
+                </select>
+            </div>
+            
+            <div class="tool-group">
+                <label>픽셀 크기:</label>
+                <select id="pixelSize">
+                    <option value="16">16px</option>
+                    <option value="20">20px</option>
+                    <option value="24">24px</option>
+                    <option value="32" selected>32px</option>
+                    <option value="40">40px</option>
+                </select>
+            </div>
+            
+            <div class="tool-group">
+                <label>색상:</label>
+                <input type="color" id="colorPicker" class="color-picker" value="#000000">
+            </div>
+            
+            <div class="tool-group">
+                <button id="penTool" class="active">펜</button>
+                <button id="eraserTool">지우개</button>
+                <button id="bucketTool">채우기</button>
+            </div>
+        </div>
+        
+        <div class="tools">
+            <div class="tool-group">
+                <label>프리셋 색상:</label>
+                <div class="preset-colors">
+                    <!-- 기본 색상 -->
+                    <div class="preset-color" style="background-color: #000000" data-color="#000000" title="검정"></div>
+                    <div class="preset-color" style="background-color: #ffffff" data-color="#ffffff" title="흰색"></div>
+                    <div class="preset-color" style="background-color: #808080" data-color="#808080" title="회색"></div>
+                    <div class="preset-color" style="background-color: #c0c0c0" data-color="#c0c0c0" title="연한 회색"></div>
+                    
+                    <!-- 빨강 계열 -->
+                    <div class="preset-color" style="background-color: #ff0000" data-color="#ff0000" title="빨강"></div>
+                    <div class="preset-color" style="background-color: #ff6b6b" data-color="#ff6b6b" title="코랄"></div>
+                    <div class="preset-color" style="background-color: #ff9999" data-color="#ff9999" title="연한 빨강"></div>
+                    <div class="preset-color" style="background-color: #8b0000" data-color="#8b0000" title="다크 레드"></div>
+                    
+                    <!-- 주황 계열 -->
+                    <div class="preset-color" style="background-color: #ffa500" data-color="#ffa500" title="오렌지"></div>
+                    <div class="preset-color" style="background-color: #ffb347" data-color="#ffb347" title="피치"></div>
+                    <div class="preset-color" style="background-color: #ff8c00" data-color="#ff8c00" title="다크 오렌지"></div>
+                    
+                    <!-- 노랑 계열 -->
+                    <div class="preset-color" style="background-color: #ffff00" data-color="#ffff00" title="노랑"></div>
+                    <div class="preset-color" style="background-color: #ffd700" data-color="#ffd700" title="골드"></div>
+                    <div class="preset-color" style="background-color: #fff8dc" data-color="#fff8dc" title="크림"></div>
+                    
+                    <!-- 초록 계열 -->
+                    <div class="preset-color" style="background-color: #00ff00" data-color="#00ff00" title="초록"></div>
+                    <div class="preset-color" style="background-color: #4caf50" data-color="#4caf50" title="그린"></div>
+                    <div class="preset-color" style="background-color: #90ee90" data-color="#90ee90" title="연한 초록"></div>
+                    <div class="preset-color" style="background-color: #228b22" data-color="#228b22" title="포레스트 그린"></div>
+                    <div class="preset-color" style="background-color: #32cd32" data-color="#32cd32" title="라임 그린"></div>
+                    
+                    <!-- 파랑 계열 -->
+                    <div class="preset-color" style="background-color: #0000ff" data-color="#0000ff" title="파랑"></div>
+                    <div class="preset-color" style="background-color: #4169e1" data-color="#4169e1" title="로얄 블루"></div>
+                    <div class="preset-color" style="background-color: #87ceeb" data-color="#87ceeb" title="스카이 블루"></div>
+                    <div class="preset-color" style="background-color: #000080" data-color="#000080" title="네이비"></div>
+                    <div class="preset-color" style="background-color: #1e90ff" data-color="#1e90ff" title="딥 스카이 블루"></div>
+                    
+                    <!-- 보라 계열 -->
+                    <div class="preset-color" style="background-color: #9932cc" data-color="#9932cc" title="퍼플"></div>
+                    <div class="preset-color" style="background-color: #dda0dd" data-color="#dda0dd" title="플럼"></div>
+                    <div class="preset-color" style="background-color: #8a2be2" data-color="#8a2be2" title="바이올렛"></div>
+                    <div class="preset-color" style="background-color: #e6e6fa" data-color="#e6e6fa" title="라벤더"></div>
+                    
+                    <!-- 분홍 계열 -->
+                    <div class="preset-color" style="background-color: #ff69b4" data-color="#ff69b4" title="핫 핑크"></div>
+                    <div class="preset-color" style="background-color: #ffc0cb" data-color="#ffc0cb" title="핑크"></div>
+                    <div class="preset-color" style="background-color: #ffb6c1" data-color="#ffb6c1" title="라이트 핑크"></div>
+                    
+                    <!-- 갈색 계열 -->
+                    <div class="preset-color" style="background-color: #8b4513" data-color="#8b4513" title="브라운"></div>
+                    <div class="preset-color" style="background-color: #d2691e" data-color="#d2691e" title="초콜릿"></div>
+                    <div class="preset-color" style="background-color: #daa520" data-color="#daa520" title="골든로드"></div>
+                    
+                    <!-- 특별한 색상들 -->
+                    <div class="preset-color" style="background-color: #00ffff" data-color="#00ffff" title="시안"></div>
+                    <div class="preset-color" style="background-color: #ff00ff" data-color="#ff00ff" title="마젠타"></div>
+                    <div class="preset-color" style="background-color: #40e0d0" data-color="#40e0d0" title="터콰이즈"></div>
+                    <div class="preset-color" style="background-color: #98fb98" data-color="#98fb98" title="페일 그린"></div>
+                    <div class="preset-color" style="background-color: #f0e68c" data-color="#f0e68c" title="카키"></div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="canvas-container">
+            <canvas id="pixelCanvas"></canvas>
+        </div>
+        
+        <div class="controls">
+            <button id="clearCanvas">전체 지우기</button>
+            <button id="downloadImage">PNG 다운로드</button>
+            <button id="gridToggle">격자 토글</button>
+            
+            <!-- NFT 민팅 섹션 -->
+            <div class="nft-section">
+                <button id="connectWallet">지갑 연결</button>
+                <button id="mintNFT" disabled>NFT 민팅</button>
+                <span id="walletStatus">지갑 연결 안됨</span>
+            </div>
+        </div>
+        
+        <!-- NFT 메타데이터 모달 -->
+        <div id="nftModal" class="modal" style="display: none;">
+            <div class="modal-content">
+                <span class="close">&times;</span>
+                <h2>NFT 메타데이터 입력</h2>
+                <form id="nftForm">
+                    <div class="form-group">
+                        <label for="nftName">작품 제목:</label>
+                        <input type="text" id="nftName" required placeholder="예: My Pixel Art">
+                    </div>
+                    <div class="form-group">
+                        <label for="nftDescription">설명:</label>
+                        <textarea id="nftDescription" placeholder="작품에 대한 설명을 입력하세요"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="nftAttributes">속성 (선택사항):</label>
+                        <input type="text" id="nftAttributes" placeholder="예: 색상:빨강, 크기:16x16">
+                    </div>
+                    <div class="form-buttons">
+                        <button type="button" id="cancelMint">취소</button>
+                        <button type="submit" id="confirmMint">민팅하기</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/web3/1.10.0/web3.min.js"></script>
+    <script>
+        class PixelArtEditor {
+            constructor() {
+                this.canvas = document.getElementById('pixelCanvas');
+                this.ctx = this.canvas.getContext('2d');
+                this.gridSize = 16;
+                this.pixelSize = 32;
+                this.currentColor = '#000000';
+                this.currentTool = 'pen';
+                this.isDrawing = false;
+                this.showGrid = true;
+                this.pixels = {};
+                
+                // Web3 관련
+                this.web3 = null;
+                this.account = null;
+                this.contract = null;
+                
+                // 스마트 컨트랙트 정보 (Mumbai 테스트넷)
+                this.contractAddress = "0x1234567890123456789012345678901234567890"; // 배포 후 업데이트 필요
+                this.contractABI = [
+                    {
+                        "inputs": [
+                            {"internalType": "address", "name": "to", "type": "address"},
+                            {"internalType": "string", "name": "tokenURI", "type": "string"}
+                        ],
+                        "name": "mint",
+                        "outputs": [],
+                        "stateMutability": "nonpayable",
+                        "type": "function"
+                    }
+                ];
+                
+                this.initCanvas();
+                this.bindEvents();
+                this.initWeb3();
+            }
+            
+            initCanvas() {
+                const canvasPixelSize = this.gridSize * this.pixelSize;
+                this.canvas.width = canvasPixelSize;
+                this.canvas.height = canvasPixelSize;
+                this.ctx.imageSmoothingEnabled = false;
+                this.clearCanvas();
+                this.drawGrid();
+            }
+            
+            clearCanvas() {
+                // 캔버스 완전히 지우기
+                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+                
+                // 흰색 배경으로 채우기
+                this.ctx.fillStyle = '#ffffff';
+                this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+                
+                // 픽셀 데이터 초기화
+                this.pixels = {};
+                
+                // 격자 다시 그리기
+                this.drawGrid();
+                
+                console.log('캔버스가 지워졌습니다!'); // 디버깅용
+            }
+            
+            drawGrid() {
+                if (!this.showGrid) return;
+                
+                this.ctx.strokeStyle = '#e0e0e0';
+                this.ctx.lineWidth = 1;
+                
+                for (let x = 0; x <= this.canvas.width; x += this.pixelSize) {
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(x, 0);
+                    this.ctx.lineTo(x, this.canvas.height);
+                    this.ctx.stroke();
+                }
+                
+                for (let y = 0; y <= this.canvas.height; y += this.pixelSize) {
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(0, y);
+                    this.ctx.lineTo(this.canvas.width, y);
+                    this.ctx.stroke();
+                }
+            }
+            
+            getPixelPosition(e) {
+                const rect = this.canvas.getBoundingClientRect();
+                const x = Math.floor((e.clientX - rect.left) / this.pixelSize);
+                const y = Math.floor((e.clientY - rect.top) / this.pixelSize);
+                return { x, y };
+            }
+            
+            drawPixel(x, y, color) {
+                const pixelX = x * this.pixelSize;
+                const pixelY = y * this.pixelSize;
+                
+                this.ctx.fillStyle = color;
+                this.ctx.fillRect(pixelX, pixelY, this.pixelSize, this.pixelSize);
+                
+                this.pixels[`${x},${y}`] = color;
+                
+                if (this.showGrid) {
+                    this.ctx.strokeStyle = '#e0e0e0';
+                    this.ctx.lineWidth = 1;
+                    this.ctx.strokeRect(pixelX, pixelY, this.pixelSize, this.pixelSize);
+                }
+            }
+            
+            erasePixel(x, y) {
+                this.drawPixel(x, y, '#ffffff');
+                delete this.pixels[`${x},${y}`];
+            }
+            
+            floodFill(x, y, newColor) {
+                const key = `${x},${y}`;
+                const originalColor = this.pixels[key] || '#ffffff';
+                
+                if (originalColor === newColor) return;
+                
+                const stack = [{x, y}];
+                const visited = new Set();
+                
+                while (stack.length > 0) {
+                    const {x: currentX, y: currentY} = stack.pop();
+                    const currentKey = `${currentX},${currentY}`;
+                    
+                    if (visited.has(currentKey)) continue;
+                    if (currentX < 0 || currentX >= this.gridSize || currentY < 0 || currentY >= this.gridSize) continue;
+                    
+                    const currentPixelColor = this.pixels[currentKey] || '#ffffff';
+                    if (currentPixelColor !== originalColor) continue;
+                    
+                    visited.add(currentKey);
+                    this.drawPixel(currentX, currentY, newColor);
+                    
+                    stack.push({x: currentX + 1, y: currentY});
+                    stack.push({x: currentX - 1, y: currentY});
+                    stack.push({x: currentX, y: currentY + 1});
+                    stack.push({x: currentX, y: currentY - 1});
+                }
+            }
+            
+            handleCanvasClick(e) {
+                const {x, y} = this.getPixelPosition(e);
+                
+                switch (this.currentTool) {
+                    case 'pen':
+                        this.drawPixel(x, y, this.currentColor);
+                        break;
+                    case 'eraser':
+                        this.erasePixel(x, y);
+                        break;
+                    case 'bucket':
+                        this.floodFill(x, y, this.currentColor);
+                        break;
+                }
+            }
+            
+            redraw() {
+                this.clearCanvas();
+                
+                // 저장된 픽셀들을 다시 그리기
+                for (const [key, color] of Object.entries(this.pixels)) {
+                    const [x, y] = key.split(',').map(Number);
+                    const pixelX = x * this.pixelSize;
+                    const pixelY = y * this.pixelSize;
+                    
+                    this.ctx.fillStyle = color;
+                    this.ctx.fillRect(pixelX, pixelY, this.pixelSize, this.pixelSize);
+                }
+                
+                this.drawGrid();
+            }
+            
+            downloadImage() {
+                // 격자 없는 깨끗한 이미지 생성
+                const tempCanvas = document.createElement('canvas');
+                const tempCtx = tempCanvas.getContext('2d');
+                tempCanvas.width = this.gridSize;
+                tempCanvas.height = this.gridSize;
+                
+                tempCtx.fillStyle = '#ffffff';
+                tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+                
+                for (const [key, color] of Object.entries(this.pixels)) {
+                    const [x, y] = key.split(',').map(Number);
+                    tempCtx.fillStyle = color;
+                    tempCtx.fillRect(x, y, 1, 1);
+                }
+                
+                const link = document.createElement('a');
+                link.download = 'pixel-art.png';
+                link.href = tempCanvas.toDataURL();
+                link.click();
+            }
+            
+            bindEvents() {
+                // 캔버스 이벤트
+                this.canvas.addEventListener('click', (e) => this.handleCanvasClick(e));
+                
+                this.canvas.addEventListener('mousedown', (e) => {
+                    this.isDrawing = true;
+                    this.handleCanvasClick(e);
+                });
+                
+                this.canvas.addEventListener('mousemove', (e) => {
+                    if (this.isDrawing && (this.currentTool === 'pen' || this.currentTool === 'eraser')) {
+                        this.handleCanvasClick(e);
+                    }
+                });
+                
+                this.canvas.addEventListener('mouseup', () => {
+                    this.isDrawing = false;
+                });
+                
+                this.canvas.addEventListener('mouseleave', () => {
+                    this.isDrawing = false;
+                });
+                
+                // 도구 이벤트
+                document.getElementById('penTool').addEventListener('click', () => this.setTool('pen'));
+                document.getElementById('eraserTool').addEventListener('click', () => this.setTool('eraser'));
+                document.getElementById('bucketTool').addEventListener('click', () => this.setTool('bucket'));
+                
+                // 색상 이벤트
+                document.getElementById('colorPicker').addEventListener('change', (e) => {
+                    this.currentColor = e.target.value;
+                });
+                
+                // 프리셋 색상 이벤트
+                document.querySelectorAll('.preset-color').forEach(colorDiv => {
+                    colorDiv.addEventListener('click', () => {
+                        this.currentColor = colorDiv.dataset.color;
+                        document.getElementById('colorPicker').value = this.currentColor;
+                    });
+                });
+                
+                // 캔버스 크기 변경
+                document.getElementById('canvasSize').addEventListener('change', (e) => {
+                    this.gridSize = parseInt(e.target.value);
+                    this.initCanvas();
+                });
+                
+                // 픽셀 크기 변경
+                document.getElementById('pixelSize').addEventListener('change', (e) => {
+                    this.pixelSize = parseInt(e.target.value);
+                    this.initCanvas();
+                    this.redraw();
+                });
+                
+                // 컨트롤 버튼들
+                document.getElementById('clearCanvas').addEventListener('click', (e) => {
+                    console.log('전체지우기 버튼 클릭됨!'); // 디버깅용
+                    
+                    // 일단 confirm 없이 바로 지워보기 (테스트용)
+                    console.log('캔버스 지우기 실행 중...'); 
+                    this.clearCanvas();
+                    
+                    // 실제 사용시에는 아래 코드 사용:
+                    /*
+                    const userConfirmed = confirm('정말 모든 내용을 지우시겠습니까?');
+                    if (userConfirmed) {
+                        this.clearCanvas();
+                    }
+                    */
+                });
+                
+                document.getElementById('downloadImage').addEventListener('click', () => this.downloadImage());
+                
+                document.getElementById('gridToggle').addEventListener('click', () => {
+                    this.showGrid = !this.showGrid;
+                    this.redraw();
+                });
+                
+                // NFT 관련 이벤트
+                document.getElementById('connectWallet').addEventListener('click', (e) => {
+                    console.log('지갑연결 버튼 클릭됨!'); // 디버깅용
+                    e.preventDefault();
+                    this.connectWallet();
+                });
+                document.getElementById('mintNFT').addEventListener('click', () => this.openMintModal());
+                document.getElementById('cancelMint').addEventListener('click', () => this.closeMintModal());
+                document.getElementById('nftForm').addEventListener('submit', (e) => this.handleMintSubmit(e));
+                document.querySelector('.close').addEventListener('click', () => this.closeMintModal());
+                
+                // 모달 외부 클릭 시 닫기
+                document.getElementById('nftModal').addEventListener('click', (e) => {
+                    if (e.target === document.getElementById('nftModal')) {
+                        this.closeMintModal();
+                    }
+                });
+            }
+            
+            setTool(tool) {
+                this.currentTool = tool;
+                
+                // 버튼 활성화 상태 업데이트
+                document.querySelectorAll('.tools button').forEach(btn => btn.classList.remove('active'));
+                document.getElementById(tool + 'Tool').classList.add('active');
+                
+                // 커서 모양 변경
+                if (tool === 'bucket') {
+                    this.canvas.style.cursor = 'pointer';
+                } else {
+                    this.canvas.style.cursor = 'crosshair';
+                }
+            }
+            
+            // Web3 및 NFT 관련 메소드들
+            async initWeb3() {
+                if (typeof window.ethereum !== 'undefined') {
+                    console.log('MetaMask가 감지되었습니다!');
+                } else {
+                    console.log('MetaMask를 설치해주세요!');
+                }
+            }
+            
+            async connectWallet() {
+                console.log('connectWallet 함수 실행됨!'); // 디버깅용
+                
+                try {
+                    // MetaMask 설치 확인
+                    if (typeof window.ethereum === 'undefined') {
+                        console.log('MetaMask가 설치되지 않음');
+                        alert('MetaMask를 설치해주세요!\n\n1. https://metamask.io 방문\n2. MetaMask 설치\n3. 새 지갑 생성 또는 복원');
+                        window.open('https://metamask.io/download/', '_blank');
+                        return;
+                    }
+                    
+                    console.log('MetaMask 감지됨, 연결 시도 중...');
+                    
+                    // 계정 요청
+                    const accounts = await window.ethereum.request({
+                        method: 'eth_requestAccounts'
+                    });
+                    
+                    console.log('연결된 계정:', accounts);
+                    
+                    if (accounts.length === 0) {
+                        alert('MetaMask에서 계정을 선택해주세요.');
+                        return;
+                    }
+                    
+                    this.account = accounts[0];
+                    console.log('선택된 계정:', this.account);
+                    
+                    // UI 업데이트
+                    const walletStatus = document.getElementById('walletStatus');
+                    const connectButton = document.getElementById('connectWallet');
+                    const mintButton = document.getElementById('mintNFT');
+                    
+                    walletStatus.textContent = `연결됨: ${this.account.slice(0, 6)}...${this.account.slice(-4)}`;
+                    walletStatus.classList.add('connected');
+                    connectButton.textContent = '지갑 연결됨';
+                    connectButton.disabled = true;
+                    mintButton.disabled = false;
+                    
+                    console.log('UI 업데이트 완료');
+                    
+                    // Web3 인스턴스 생성
+                    if (typeof Web3 !== 'undefined') {
+                        this.web3 = new Web3(window.ethereum);
+                        console.log('Web3 인스턴스 생성됨');
+                    } else {
+                        console.log('Web3 라이브러리가 로드되지 않음');
+                    }
+                    
+                    // 네트워크 정보 확인
+                    const chainId = await window.ethereum.request({
+                        method: 'eth_chainId'
+                    });
+                    console.log('현재 네트워크 체인 ID:', chainId);
+                    
+                    // 성공 메시지
+                    alert('🎉 지갑 연결 성공!\n\n연결된 주소: ' + this.account);
+                    
+                } catch (error) {
+                    console.error('지갑 연결 실패:', error);
+                    
+                    if (error.code === 4001) {
+                        alert('사용자가 연결을 거부했습니다.');
+                    } else {
+                        alert('지갑 연결에 실패했습니다: ' + error.message);
+                    }
+                }
+            }
+            
+            async switchToMumbai() {
+                try {
+                    const chainId = await window.ethereum.request({
+                        method: 'eth_chainId'
+                    });
+                    
+                    if (chainId !== '0x13881') {
+                        try {
+                            await window.ethereum.request({
+                                method: 'wallet_switchEthereumChain',
+                                params: [{ chainId: '0x13881' }],
+                            });
+                        } catch (switchError) {
+                            if (switchError.code === 4902) {
+                                await this.addMumbaiNetwork();
+                            } else {
+                                throw switchError;
+                            }
+                        }
+                    }
+                } catch (error) {
+                    console.error('Mumbai 네트워크 전환 실패:', error);
+                    alert('Mumbai 테스트넷 전환에 실패했습니다.');
+                }
+            }
+            
+            showTestTokenInfo() {
+                const message = `🎉 Mumbai 테스트넷 연결 완료!\n\n💰 테스트 MATIC이 필요하면:\n1. https://faucet.polygon.technology/ 방문\n2. 지갑 주소 입력: ${this.account}\n3. 무료 테스트 MATIC 받기\n\n📝 NFT 민팅 준비 완료!`;
+                
+                if (confirm(message + '\n\n테스트 MATIC 받으러 갈까요?')) {
+                    window.open('https://faucet.polygon.technology/', '_blank');
+                }
+            }
+            
+            async addMumbaiNetwork() {
+                try {
+                    await window.ethereum.request({
+                        method: 'wallet_addEthereumChain',
+                        params: [{
+                            chainId: '0x13881',
+                            chainName: 'Polygon Mumbai Testnet',
+                            nativeCurrency: {
+                                name: 'MATIC',
+                                symbol: 'MATIC',
+                                decimals: 18,
+                            },
+                            rpcUrls: ['https://rpc-mumbai.maticvigil.com/'],
+                            blockExplorerUrls: ['https://mumbai.polygonscan.com/'],
+                        }],
+                    });
+                } catch (addError) {
+                    console.error('네트워크 추가 실패:', addError);
+                    throw addError;
+                }
+            }
+            
+            openMintModal() {
+                if (Object.keys(this.pixels).length === 0) {
+                    alert('먼저 픽셀아트를 그려주세요!');
+                    return;
+                }
+                document.getElementById('nftModal').style.display = 'block';
+            }
+            
+            closeMintModal() {
+                document.getElementById('nftModal').style.display = 'none';
+                document.getElementById('nftForm').reset();
+            }
+            
+            async handleMintSubmit(e) {
+                e.preventDefault();
+                
+                const name = document.getElementById('nftName').value;
+                const description = document.getElementById('nftDescription').value;
+                const attributes = document.getElementById('nftAttributes').value;
+                
+                try {
+                    await this.mintNFT(name, description, attributes);
+                } catch (error) {
+                    console.error('NFT 민팅 실패:', error);
+                    alert('NFT 민팅에 실패했습니다: ' + error.message);
+                }
+            }
+            
+            async mintNFT(name, description, attributes) {
+                if (!this.account) {
+                    alert('먼저 지갑을 연결해주세요!');
+                    return;
+                }
+                
+                try {
+                    // 로딩 표시
+                    document.getElementById('confirmMint').disabled = true;
+                    document.getElementById('confirmMint').textContent = '민팅 중...';
+                    
+                    // 픽셀아트를 Base64로 변환
+                    const imageData = this.getImageAsBase64();
+                    
+                    // 메타데이터 생성
+                    const metadata = {
+                        name: name,
+                        description: description,
+                        image: imageData,
+                        attributes: this.parseAttributes(attributes),
+                        created_by: this.account,
+                        created_at: new Date().toISOString(),
+                        canvas_size: `${this.gridSize}x${this.gridSize}`,
+                        pixel_count: Object.keys(this.pixels).length,
+                        network: 'Polygon Mumbai Testnet'
+                    };
+                    
+                    console.log('NFT 메타데이터:', metadata);
+                    
+                    // 메타데이터를 JSON 파일로 다운로드
+                    const dataStr = JSON.stringify(metadata, null, 2);
+                    const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+                    
+                    const exportFileDefaultName = `${name.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_nft_metadata.json`;
+                    
+                    const linkElement = document.createElement('a');
+                    linkElement.setAttribute('href', dataUri);
+                    linkElement.setAttribute('download', exportFileDefaultName);
+                    linkElement.click();
+                    
+                    alert(`🎨 NFT 메타데이터 생성 완료!\n\n작품명: ${name}\n설명: ${description}\n\n${exportFileDefaultName} 파일이 다운로드되었습니다.\n\n실제 민팅을 위해서는 Thirdweb에서 스마트 컨트랙트를 배포해주세요!`);
+                    
+                    this.closeMintModal();
+                    
+                } catch (error) {
+                    console.error('NFT 처리 실패:', error);
+                    alert(`처리 실패: ${error.message}`);
+                } finally {
+                    document.getElementById('confirmMint').disabled = false;
+                    document.getElementById('confirmMint').textContent = '민팅하기';
+                }
+            }
+            
+            getImageAsBase64() {
+                // 격자 없는 깨끗한 이미지 생성
+                const tempCanvas = document.createElement('canvas');
+                const tempCtx = tempCanvas.getContext('2d');
+                tempCanvas.width = this.gridSize;
+                tempCanvas.height = this.gridSize;
+                
+                tempCtx.fillStyle = '#ffffff';
+                tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+                
+                for (const [key, color] of Object.entries(this.pixels)) {
+                    const [x, y] = key.split(',').map(Number);
+                    tempCtx.fillStyle = color;
+                    tempCtx.fillRect(x, y, 1, 1);
+                }
+                
+                return tempCanvas.toDataURL('image/png');
+            }
+            
+            parseAttributes(attributesString) {
+                if (!attributesString) return [];
+                
+                return attributesString.split(',').map(attr => {
+                    const [key, value] = attr.split(':').map(s => s.trim());
+                    return { trait_type: key, value: value };
+                }).filter(attr => attr.trait_type && attr.value);
+            }
+        }
+        
+        // 페이지 로드 시 에디터 초기화
+        window.addEventListener('load', () => {
+            new PixelArtEditor();
+        });
+    </script>
+</body>
+</html>
+                
