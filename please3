@@ -1,0 +1,963 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>픽셀아트 스튜디오</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            color: #6b7280;
+            font-size: 1.1rem;
+        }
+        
+        .main-layout {
+            display: grid;
+            grid-template-columns: 250px 1fr 250px;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+        
+        .sidebar {
+            background: rgba(248, 250, 252, 0.8);
+            border-radius: 16px;
+            padding: 20px;
+        }
+        
+        .canvas-section {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            text-align: center;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+        
+        .section-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 15px;
+        }
+        
+        .control-group {
+            margin-bottom: 20px;
+        }
+        
+        .control-group label {
+            display: block;
+            font-weight: 500;
+            color: #374151;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+        }
+        
+        select, input[type="number"] {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+            font-size: 14px;
+            background: white;
+        }
+        
+        select:focus, input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .color-picker {
+            width: 100%;
+            height: 50px;
+            border: 3px solid #e5e7eb;
+            border-radius: 10px;
+            cursor: pointer;
+        }
+        
+        .tools-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 8px;
+        }
+        
+        .tool-btn {
+            padding: 12px 8px;
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+            background: white;
+            color: #6b7280;
+            font-weight: 500;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .tool-btn:hover {
+            border-color: #667eea;
+            color: #667eea;
+        }
+        
+        .tool-btn.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+        
+        .colors-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+        }
+        
+        .color-btn {
+            width: 100%;
+            height: 35px;
+            border: 3px solid #e5e7eb;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .color-btn:hover {
+            transform: scale(1.1);
+            border-color: #374151;
+        }
+        
+        .color-btn.selected {
+            border-color: #667eea;
+            border-width: 4px;
+        }
+        
+        #canvas {
+            border: 3px solid #e5e7eb;
+            border-radius: 16px;
+            cursor: crosshair;
+            background: white;
+            image-rendering: pixelated;
+            margin: 20px 0;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+        }
+        
+        .canvas-info {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-bottom: 15px;
+            font-size: 14px;
+            color: #6b7280;
+        }
+        
+        .info-badge {
+            background: rgba(102, 126, 234, 0.1);
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-weight: 500;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        .btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+        }
+        
+        .btn-secondary {
+            background: white;
+            color: #6b7280;
+            border: 2px solid #e5e7eb;
+        }
+        
+        .btn-secondary:hover {
+            border-color: #667eea;
+            color: #667eea;
+        }
+        
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background: #dc2626;
+        }
+        
+        .helper-tools {
+            margin-top: 15px;
+        }
+        
+        .helper-btn {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 8px;
+            border: 2px dashed #d1d5db;
+            border-radius: 10px;
+            background: rgba(249, 250, 251, 0.5);
+            color: #6b7280;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .helper-btn:hover {
+            border-color: #667eea;
+            color: #667eea;
+            background: rgba(102, 126, 234, 0.05);
+        }
+        
+        .modal {
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(5px);
+            display: none;
+        }
+        
+        .modal-content {
+            background: white;
+            margin: 10% auto;
+            padding: 30px;
+            border-radius: 20px;
+            width: 90%;
+            max-width: 500px;
+            position: relative;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+        }
+        
+        .close-btn {
+            position: absolute;
+            right: 20px;
+            top: 15px;
+            font-size: 24px;
+            font-weight: bold;
+            cursor: pointer;
+            color: #aaa;
+        }
+        
+        .close-btn:hover {
+            color: #000;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #374151;
+        }
+        
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+            font-size: 14px;
+            font-family: 'Inter', sans-serif;
+        }
+        
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .form-buttons {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+            margin-top: 25px;
+        }
+        
+        @media (max-width: 1024px) {
+            .main-layout {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            
+            .canvas-section {
+                order: -1;
+            }
+        }
+        
+        @media (max-width: 640px) {
+            .colors-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>픽셀아트 스튜디오</h1>
+            <p>나만의 멋진 픽셀아트를 만들어보세요</p>
+        </div>
+        
+        <div class="main-layout">
+            <div class="sidebar">
+                <div class="section-title">캔버스 설정</div>
+                
+                <div class="control-group">
+                    <label>캔버스 크기</label>
+                    <select id="canvasSize">
+                        <option value="8">8 × 8</option>
+                        <option value="16" selected>16 × 16</option>
+                        <option value="32">32 × 32</option>
+                        <option value="64">64 × 64</option>
+                    </select>
+                </div>
+                
+                <div class="control-group">
+                    <label>픽셀 크기</label>
+                    <select id="pixelSize">
+                        <option value="16">작게</option>
+                        <option value="24">보통</option>
+                        <option value="32" selected>크게</option>
+                        <option value="40">매우 크게</option>
+                    </select>
+                </div>
+                
+                <div class="control-group">
+                    <label>현재 색상</label>
+                    <input type="color" id="colorPicker" class="color-picker" value="#000000">
+                </div>
+                
+                <div class="control-group">
+                    <label>그리기 도구</label>
+                    <div class="tools-grid">
+                        <button class="tool-btn active" id="penTool">펜</button>
+                        <button class="tool-btn" id="eraserTool">지우개</button>
+                        <button class="tool-btn" id="bucketTool">채우기</button>
+                    </div>
+                </div>
+                
+                <div class="helper-tools">
+                    <div class="section-title">도움 도구</div>
+                    <button class="helper-btn" id="gridToggle">격자 표시/숨김</button>
+                    <button class="helper-btn" id="undoBtn">실행 취소</button>
+                    <button class="helper-btn" id="redoBtn">다시 실행</button>
+                </div>
+            </div>
+            
+            <div class="canvas-section">
+                <div class="canvas-info">
+                    <span class="info-badge" id="canvasInfo">16 × 16</span>
+                    <span class="info-badge" id="pixelCount">픽셀: 0개</span>
+                    <span class="info-badge" id="currentTool">도구: 펜</span>
+                </div>
+                
+                <canvas id="canvas" width="512" height="512"></canvas>
+                
+                <div class="action-buttons">
+                    <button class="btn btn-danger" id="clearBtn">전체 지우기</button>
+                    <button class="btn btn-primary" id="downloadBtn">PNG 다운로드</button>
+                    <button class="btn btn-secondary" id="nftBtn">NFT 만들기</button>
+                </div>
+            </div>
+            
+            <div class="sidebar">
+                <div class="section-title">색상 팔레트</div>
+                
+                <div class="colors-grid" id="colorPalette">
+                    <div class="color-btn selected" style="background: #000000" data-color="#000000"></div>
+                    <div class="color-btn" style="background: #ffffff" data-color="#ffffff"></div>
+                    <div class="color-btn" style="background: #808080" data-color="#808080"></div>
+                    <div class="color-btn" style="background: #c0c0c0" data-color="#c0c0c0"></div>
+                    
+                    <div class="color-btn" style="background: #ff0000" data-color="#ff0000"></div>
+                    <div class="color-btn" style="background: #ff6b6b" data-color="#ff6b6b"></div>
+                    <div class="color-btn" style="background: #ff9999" data-color="#ff9999"></div>
+                    <div class="color-btn" style="background: #8b0000" data-color="#8b0000"></div>
+                    
+                    <div class="color-btn" style="background: #ffa500" data-color="#ffa500"></div>
+                    <div class="color-btn" style="background: #ffb347" data-color="#ffb347"></div>
+                    <div class="color-btn" style="background: #ff8c00" data-color="#ff8c00"></div>
+                    <div class="color-btn" style="background: #ffff00" data-color="#ffff00"></div>
+                    
+                    <div class="color-btn" style="background: #00ff00" data-color="#00ff00"></div>
+                    <div class="color-btn" style="background: #4caf50" data-color="#4caf50"></div>
+                    <div class="color-btn" style="background: #90ee90" data-color="#90ee90"></div>
+                    <div class="color-btn" style="background: #228b22" data-color="#228b22"></div>
+                    
+                    <div class="color-btn" style="background: #0000ff" data-color="#0000ff"></div>
+                    <div class="color-btn" style="background: #4169e1" data-color="#4169e1"></div>
+                    <div class="color-btn" style="background: #87ceeb" data-color="#87ceeb"></div>
+                    <div class="color-btn" style="background: #000080" data-color="#000080"></div>
+                    
+                    <div class="color-btn" style="background: #9932cc" data-color="#9932cc"></div>
+                    <div class="color-btn" style="background: #dda0dd" data-color="#dda0dd"></div>
+                    <div class="color-btn" style="background: #8a2be2" data-color="#8a2be2"></div>
+                    <div class="color-btn" style="background: #ff69b4" data-color="#ff69b4"></div>
+                    
+                    <div class="color-btn" style="background: #ffc0cb" data-color="#ffc0cb"></div>
+                    <div class="color-btn" style="background: #8b4513" data-color="#8b4513"></div>
+                    <div class="color-btn" style="background: #d2691e" data-color="#d2691e"></div>
+                    <div class="color-btn" style="background: #40e0d0" data-color="#40e0d0"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- NFT 모달 -->
+    <div id="nftModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" id="closeModal">&times;</span>
+            <h2>NFT 메타데이터 생성</h2>
+            <form id="nftForm">
+                <div class="form-group">
+                    <label>작품 제목</label>
+                    <input type="text" id="nftTitle" required placeholder="예: My Amazing Pixel Art">
+                </div>
+                <div class="form-group">
+                    <label>설명</label>
+                    <textarea id="nftDescription" rows="3" placeholder="작품에 대한 설명을 입력하세요"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>속성 (선택사항)</label>
+                    <input type="text" id="nftAttributes" placeholder="예: 스타일:픽셀아트, 색상:컬러풀">
+                </div>
+                <div class="form-buttons">
+                    <button type="button" class="btn btn-secondary" id="cancelNft">취소</button>
+                    <button type="submit" class="btn btn-primary" id="createNft">NFT 생성</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // 전역 변수
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        let gridSize = 16;
+        let pixelSize = 32;
+        let currentColor = '#000000';
+        let currentTool = 'pen';
+        let showGrid = true;
+        let pixels = {};
+        let isDrawing = false;
+        let history = [];
+        let historyIndex = -1;
+        
+        // 초기화
+        function init() {
+            updateCanvasSize();
+            clearCanvas();
+            updateInfo();
+            saveState();
+        }
+        
+        function updateCanvasSize() {
+            const size = gridSize * pixelSize;
+            canvas.width = size;
+            canvas.height = size;
+            ctx.imageSmoothingEnabled = false;
+        }
+        
+        function clearCanvas() {
+            ctx.fillStyle = 'white';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            pixels = {};
+            drawGrid();
+        }
+        
+        function drawGrid() {
+            if (!showGrid) return;
+            
+            ctx.strokeStyle = 'rgba(0, 0, 0, 0.1)';
+            ctx.lineWidth = 1;
+            
+            for (let x = 0; x <= canvas.width; x += pixelSize) {
+                ctx.beginPath();
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, canvas.height);
+                ctx.stroke();
+            }
+            
+            for (let y = 0; y <= canvas.height; y += pixelSize) {
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(canvas.width, y);
+                ctx.stroke();
+            }
+        }
+        
+        function getPixelPos(e) {
+            const rect = canvas.getBoundingClientRect();
+            const x = Math.floor((e.clientX - rect.left) / pixelSize);
+            const y = Math.floor((e.clientY - rect.top) / pixelSize);
+            return { x, y };
+        }
+        
+        function drawPixel(x, y, color) {
+            if (x < 0 || x >= gridSize || y < 0 || y >= gridSize) return;
+            
+            const pixelX = x * pixelSize;
+            const pixelY = y * pixelSize;
+            
+            ctx.fillStyle = color;
+            ctx.fillRect(pixelX, pixelY, pixelSize, pixelSize);
+            
+            if (color === 'white') {
+                delete pixels[`${x},${y}`];
+            } else {
+                pixels[`${x},${y}`] = color;
+            }
+            
+            if (showGrid) {
+                ctx.strokeStyle = 'rgba(0, 0, 0, 0.1)';
+                ctx.lineWidth = 1;
+                ctx.strokeRect(pixelX, pixelY, pixelSize, pixelSize);
+            }
+            
+            updateInfo();
+        }
+        
+        function floodFill(x, y, newColor) {
+            const key = `${x},${y}`;
+            const originalColor = pixels[key] || 'white';
+            
+            if (originalColor === newColor) return;
+            
+            const stack = [{x, y}];
+            const visited = new Set();
+            
+            while (stack.length > 0) {
+                const current = stack.pop();
+                const currentKey = `${current.x},${current.y}`;
+                
+                if (visited.has(currentKey) || 
+                    current.x < 0 || current.x >= gridSize || 
+                    current.y < 0 || current.y >= gridSize) continue;
+                
+                const currentPixelColor = pixels[currentKey] || 'white';
+                if (currentPixelColor !== originalColor) continue;
+                
+                visited.add(currentKey);
+                drawPixel(current.x, current.y, newColor);
+                
+                stack.push({x: current.x + 1, y: current.y});
+                stack.push({x: current.x - 1, y: current.y});
+                stack.push({x: current.x, y: current.y + 1});
+                stack.push({x: current.x, y: current.y - 1});
+            }
+        }
+        
+        function handleCanvasClick(e) {
+            const pos = getPixelPos(e);
+            
+            switch (currentTool) {
+                case 'pen':
+                    drawPixel(pos.x, pos.y, currentColor);
+                    break;
+                case 'eraser':
+                    drawPixel(pos.x, pos.y, 'white');
+                    break;
+                case 'bucket':
+                    floodFill(pos.x, pos.y, currentColor);
+                    break;
+            }
+        }
+        
+        function redraw() {
+            clearCanvas();
+            
+            for (const [key, color] of Object.entries(pixels)) {
+                const [x, y] = key.split(',').map(Number);
+                const pixelX = x * pixelSize;
+                const pixelY = y * pixelSize;
+                
+                ctx.fillStyle = color;
+                ctx.fillRect(pixelX, pixelY, pixelSize, pixelSize);
+            }
+            
+            drawGrid();
+        }
+        
+        function updateInfo() {
+            document.getElementById('canvasInfo').textContent = `${gridSize} × ${gridSize}`;
+            document.getElementById('pixelCount').textContent = `픽셀: ${Object.keys(pixels).length}개`;
+            const toolNames = { pen: '펜', eraser: '지우개', bucket: '채우기' };
+            document.getElementById('currentTool').textContent = `도구: ${toolNames[currentTool]}`;
+        }
+        
+        function setTool(tool) {
+            currentTool = tool;
+            
+            document.querySelectorAll('.tool-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById(tool + 'Tool').classList.add('active');
+            
+            canvas.style.cursor = tool === 'bucket' ? 'pointer' : 'crosshair';
+            updateInfo();
+        }
+        
+        function setColor(color) {
+            currentColor = color;
+            document.getElementById('colorPicker').value = color;
+            
+            document.querySelectorAll('.color-btn').forEach(btn => btn.classList.remove('selected'));
+            document.querySelector(`[data-color="${color}"]`).classList.add('selected');
+        }
+        
+        function downloadImage() {
+            const resolution = prompt('PNG 해상도를 선택하세요:\n1 = 512×512\n2 = 1024×1024\n3 = 원본 크기', '1');
+            
+            let outputSize;
+            switch(resolution) {
+                case '1': outputSize = 512; break;
+                case '2': outputSize = 1024; break;
+                case '3': outputSize = gridSize; break;
+                default: outputSize = 512;
+            }
+            
+            const tempCanvas = document.createElement('canvas');
+            const tempCtx = tempCanvas.getContext('2d');
+            tempCanvas.width = gridSize;
+            tempCanvas.height = gridSize;
+            
+            tempCtx.fillStyle = 'white';
+            tempCtx.fillRect(0, 0, gridSize, gridSize);
+            
+            for (const [key, color] of Object.entries(pixels)) {
+                const [x, y] = key.split(',').map(Number);
+                tempCtx.fillStyle = color;
+                tempCtx.fillRect(x, y, 1, 1);
+            }
+            
+            const outputCanvas = document.createElement('canvas');
+            const outputCtx = outputCanvas.getContext('2d');
+            outputCanvas.width = outputSize;
+            outputCanvas.height = outputSize;
+            
+            outputCtx.imageSmoothingEnabled = false;
+            outputCtx.drawImage(tempCanvas, 0, 0, outputSize, outputSize);
+            
+            const link = document.createElement('a');
+            link.download = `pixel-art-${outputSize}x${outputSize}.png`;
+            link.href = outputCanvas.toDataURL('image/png');
+            link.click();
+        }
+        
+        function saveState() {
+            if (historyIndex < history.length - 1) {
+                history = history.slice(0, historyIndex + 1);
+            }
+            history.push(JSON.stringify(pixels));
+            if (history.length > 20) {
+                history.shift();
+            } else {
+                historyIndex++;
+            }
+        }
+        
+        function undo() {
+            if (historyIndex > 0) {
+                historyIndex--;
+                pixels = JSON.parse(history[historyIndex]);
+                redraw();
+                updateInfo();
+            }
+        }
+        
+        function redo() {
+            if (historyIndex < history.length - 1) {
+                historyIndex++;
+                pixels = JSON.parse(history[historyIndex]);
+                redraw();
+                updateInfo();
+            }
+        }
+        
+        function createNFT() {
+            const title = document.getElementById('nftTitle').value;
+            const description = document.getElementById('nftDescription').value;
+            const attributes = document.getElementById('nftAttributes').value;
+            
+            if (!title) {
+                alert('작품 제목을 입력해주세요.');
+                return;
+            }
+            
+            if (Object.keys(pixels).length === 0) {
+                alert('먼저 픽셀아트를 그려주세요.');
+                return;
+            }
+            
+            const imageData = getHighResImage();
+            
+            const metadata = {
+                name: title,
+                description: description || "픽셀아트 스튜디오에서 제작",
+                image: imageData,
+                attributes: parseAttributes(attributes),
+                external_url: window.location.href,
+                properties: {
+                    created_by: "Pixel Art Studio",
+                    created_at: new Date().toISOString(),
+                    canvas_size: `${gridSize}x${gridSize}`,
+                    pixel_count: Object.keys(pixels).length,
+                    total_colors: new Set(Object.values(pixels)).size
+                }
+            };
+            
+            const dataStr = JSON.stringify(metadata, null, 2);
+            const dataUri = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr);
+            const fileName = `${title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_nft.json`;
+            
+            const link = document.createElement('a');
+            link.href = dataUri;
+            link.download = fileName;
+            link.click();
+            
+            alert(`NFT 메타데이터가 생성되었습니다!\n\n파일: ${fileName}\n픽셀 수: ${Object.keys(pixels).length}개\n사용된 색상: ${new Set(Object.values(pixels)).size}가지`);
+            
+            document.getElementById('nftModal').style.display = 'none';
+            document.getElementById('nftForm').reset();
+        }
+        
+        function getHighResImage() {
+            const tempCanvas = document.createElement('canvas');
+            const tempCtx = tempCanvas.getContext('2d');
+            tempCanvas.width = gridSize;
+            tempCanvas.height = gridSize;
+            
+            tempCtx.fillStyle = 'white';
+            tempCtx.fillRect(0, 0, gridSize, gridSize);
+            
+            for (const [key, color] of Object.entries(pixels)) {
+                const [x, y] = key.split(',').map(Number);
+                tempCtx.fillStyle = color;
+                tempCtx.fillRect(x, y, 1, 1);
+            }
+            
+            const outputCanvas = document.createElement('canvas');
+            const outputCtx = outputCanvas.getContext('2d');
+            outputCanvas.width = 1024;
+            outputCanvas.height = 1024;
+            
+            outputCtx.imageSmoothingEnabled = false;
+            outputCtx.drawImage(tempCanvas, 0, 0, 1024, 1024);
+            
+            return outputCanvas.toDataURL('image/png');
+        }
+        
+        function parseAttributes(attributesString) {
+            const defaultAttributes = [
+                { trait_type: "Style", value: "Pixel Art" },
+                { trait_type: "Canvas Size", value: `${gridSize}x${gridSize}` },
+                { trait_type: "Pixel Count", value: Object.keys(pixels).length }
+            ];
+            
+            if (!attributesString) return defaultAttributes;
+            
+            const customAttributes = attributesString.split(',').map(attr => {
+                const [key, value] = attr.split(':').map(s => s.trim());
+                return { trait_type: key, value: value };
+            }).filter(attr => attr.trait_type && attr.value);
+            
+            return [...defaultAttributes, ...customAttributes];
+        }
+        
+        // 이벤트 리스너 설정
+        function setupEvents() {
+            // 캔버스 이벤트
+            canvas.addEventListener('click', handleCanvasClick);
+            
+            canvas.addEventListener('mousedown', (e) => {
+                isDrawing = true;
+                handleCanvasClick(e);
+            });
+            
+            canvas.addEventListener('mousemove', (e) => {
+                if (isDrawing && (currentTool === 'pen' || currentTool === 'eraser')) {
+                    handleCanvasClick(e);
+                }
+            });
+            
+            canvas.addEventListener('mouseup', () => {
+                if (isDrawing) saveState();
+                isDrawing = false;
+            });
+            
+            canvas.addEventListener('mouseleave', () => {
+                if (isDrawing) saveState();
+                isDrawing = false;
+            });
+            
+            // 도구 버튼
+            document.getElementById('penTool').addEventListener('click', () => setTool('pen'));
+            document.getElementById('eraserTool').addEventListener('click', () => setTool('eraser'));
+            document.getElementById('bucketTool').addEventListener('click', () => setTool('bucket'));
+            
+            // 색상 선택
+            document.getElementById('colorPicker').addEventListener('change', (e) => {
+                setColor(e.target.value);
+            });
+            
+            document.querySelectorAll('.color-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    setColor(btn.dataset.color);
+                });
+            });
+            
+            // 캔버스 설정
+            document.getElementById('canvasSize').addEventListener('change', (e) => {
+                gridSize = parseInt(e.target.value);
+                updateCanvasSize();
+                clearCanvas();
+                updateInfo();
+                saveState();
+            });
+            
+            document.getElementById('pixelSize').addEventListener('change', (e) => {
+                pixelSize = parseInt(e.target.value);
+                updateCanvasSize();
+                redraw();
+            });
+            
+            // 액션 버튼
+            document.getElementById('clearBtn').addEventListener('click', () => {
+                if (confirm('정말 모든 내용을 지우시겠습니까?')) {
+                    clearCanvas();
+                    updateInfo();
+                    saveState();
+                }
+            });
+            
+            document.getElementById('downloadBtn').addEventListener('click', downloadImage);
+            
+            document.getElementById('nftBtn').addEventListener('click', () => {
+                if (Object.keys(pixels).length === 0) {
+                    alert('먼저 픽셀아트를 그려주세요.');
+                    return;
+                }
+                document.getElementById('nftModal').style.display = 'block';
+            });
+            
+            // 도구 버튼
+            document.getElementById('gridToggle').addEventListener('click', () => {
+                showGrid = !showGrid;
+                redraw();
+            });
+            
+            document.getElementById('undoBtn').addEventListener('click', undo);
+            document.getElementById('redoBtn').addEventListener('click', redo);
+            
+            // NFT 모달
+            document.getElementById('closeModal').addEventListener('click', () => {
+                document.getElementById('nftModal').style.display = 'none';
+            });
+            
+            document.getElementById('cancelNft').addEventListener('click', () => {
+                document.getElementById('nftModal').style.display = 'none';
+            });
+            
+            document.getElementById('nftForm').addEventListener('submit', (e) => {
+                e.preventDefault();
+                createNFT();
+            });
+            
+            // 모달 외부 클릭
+            document.getElementById('nftModal').addEventListener('click', (e) => {
+                if (e.target === document.getElementById('nftModal')) {
+                    document.getElementById('nftModal').style.display = 'none';
+                }
+            });
+            
+            // 키보드 단축키
+            document.addEventListener('keydown', (e) => {
+                if (e.ctrlKey || e.metaKey) {
+                    switch (e.key) {
+                        case 'z':
+                            e.preventDefault();
+                            if (e.shiftKey) {
+                                redo();
+                            } else {
+                                undo();
+                            }
+                            break;
+                        case 'y':
+                            e.preventDefault();
+                            redo();
+                            break;
+                    }
+                }
+            });
+        }
+        
+        // 초기화 실행
+        window.addEventListener('load', () => {
+            init();
+            setupEvents();
+        });
+    </script>
+</body>
+</html>
